@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 class FinancialInput(BaseModel):
+    user_id: str | None = None
     income: float = Field(..., gt=0, description="Monthly income")
     expenses: float = Field(..., gt=0, description="Monthly expenses")
     debt: float = Field(..., gt=0, description="Monthly debt payments")
