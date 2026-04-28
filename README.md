@@ -1,86 +1,110 @@
-# AI Agent FastAPI
+# Financial AI Agent API
 
-A demo [FastAPI](https://fastapi.tiangolo.com/) API that accepts a simple financial profile (income, expenses, debt) and returns a risk analysis produced by a [Cohere](https://cohere.com/) chat model.
+A modular AI agent prototype built with FastAPI and Cohere.
 
-## Requirements
+---
 
-- Python 3.10 or newer
-- A Cohere account and an [API key](https://dashboard.cohere.com/)
+## Features
 
-## Installation
+- FastAPI backend
+- Cohere LLM integration
+- Tool calling
+- Short-term memory
+- Lightweight retrieval layer
+- Structured JSON responses
+- Basic logging
 
-```bash
-cd ai-agent-fastapi
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+---
+
+## Architecture
+
+The system follows a modular architecture:
+
+- API Layer: receives requests and returns structured responses
+- Service Layer: orchestrates the agent workflow
+- Tool Layer: executes deterministic Python functions
+- Memory Layer: stores recent user interactions
+- Knowledge Layer: retrieves relevant financial context
+
+---
+
+## Agent Flow
+
+1. The user sends financial data
+2. The agent reviews recent memory
+3. The LLM decides which tools should be used
+4. Python executes the selected tools
+5. The system retrieves relevant financial knowledge
+6. The LLM generates a structured final response
+
+---
+
+## Example Request
+
+```json
+{
+  "user_id": "raynier",
+  "income": 3000,
+  "expenses": 2900,
+  "debt": 12000
+}
 ```
 
-## Configuration
+---
 
-Create a `.env` file at the project root (do not commit it; it is listed in `.gitignore`):
+## Example Response
+
+```json
+{
+  "risk_level": "high",
+  "summary": "Your current financial situation indicates a high risk level due to high debt and low monthly savings.",
+  "recommendation": "Focus on reducing debt and building an emergency fund."
+}
+```
+
+---
+
+## Run Locally
+
+```bash
+python3 -m venv .venv
+
+source .venv/bin/activate
+
+pip install -r requirements.txt
+
+uvicorn app.main:app --reload
+```
+
+---
+
+## Open API Docs
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file:
 
 ```env
-COHERE_API_KEY=your_key_here
+COHERE_API_KEY=your_cohere_api_key_here
 ```
 
-## Run the API
+---
 
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+## Future Improvements
 
-- Interactive docs (Swagger): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+In production, this system could be improved with:
 
-## Endpoints
-
-| Method | Path       | Description                    |
-| ------ | ---------- | ------------------------------ |
-| `GET`  | `/`        | Health check.                  |
-| `POST` | `/analyze` | Analyze the JSON request body. |
-
-### `POST /analyze`
-
-**Request body (JSON)** — all values must be greater than 0:
-
-| Field      | Type   | Description                    |
-| ---------- | ------ | ------------------------------ |
-| `income`   | number | Monthly income                 |
-| `expenses` | number | Monthly expenses               |
-| `debt`     | number | Monthly debt payments          |
-
-**Response** — JSON object with:
-
-| Field            | Description                                                |
-| ---------------- | ---------------------------------------------------------- |
-| `risk_level`     | Risk level (e.g. `low`, `medium`, `high`, `unknown`)     |
-| `summary`        | Short summary                                              |
-| `recommendation` | Concrete recommendation                                  |
-
-If the model does not return valid JSON, the API may respond with `risk_level: "unknown"` and the raw text in `recommendation`.
-
-**Example with `curl`:**
-
-```bash
-curl -s -X POST "http://127.0.0.1:8000/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{"income": 5000, "expenses": 3200, "debt": 400}'
-```
-
-## Project layout
-
-```
-app/
-  main.py              # FastAPI routes and error handling
-  schemas.py           # Pydantic models (input / output)
-  services/
-    analyzer.py        # Cohere call and JSON parsing
-```
-
-The model configured in code is `command-r-08-2024`; you can change it in `app/services/analyzer.py` based on what your Cohere account supports.
-
-## Errors
-
-- `422` responses: invalid body or values that fail schema validation.
-- `500` responses: Cohere call failed, missing key, or unexpected error; details are usually in the error JSON `detail` field.
+- Persistent memory using PostgreSQL
+- Vector search using embeddings
+- Authentication and rate limiting
+- Background queues
+- Better observability and tracing
+- Automated evaluation pipelines
+- Unit and integration testing
+- Docker deployment
