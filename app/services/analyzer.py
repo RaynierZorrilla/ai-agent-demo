@@ -7,12 +7,11 @@ import cohere
 from dotenv import load_dotenv
 
 from app.schemas import FinancialInput
+from app.memory.store import save_interaction, get_recent_interactions
+from app.tools.finance_tools import calculate_savings, determine_risk_level
 
 load_dotenv()
-
 co = cohere.ClientV2(api_key=os.getenv("COHERE_API_KEY"))
-
-from app.tools.finance_tools import calculate_savings, determine_risk_level
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,7 +22,13 @@ TOOLS =  {
 
 
 def analyze_financial_data(data: FinancialInput) -> dict:
-    logging.info("Starting analysis...")
+    logging.info("Starting analysis with memory...")
+
+    recent_memory = []
+    if data.user_id:
+        recent_memory = get_recent_interactions(data.user_id)
+
+    
 
     #Decide the tools to use
     response = co.chat(
@@ -43,6 +48,8 @@ def analyze_financial_data(data: FinancialInput) -> dict:
             {
                 "role": "user",
                 "content": (
+                    f"Recent memory:\n{json.dumps(recent_memory, indent=2)}\n\n"
+                    f"Current Input:\n"
                     f"income: {data.income}\n"
                     f"expenses: {data.expenses}\n"
                     f"debt: {data.debt}\n\n"
@@ -103,6 +110,7 @@ def analyze_financial_data(data: FinancialInput) -> dict:
             {
                 "role": "user",
                 "content": (
+                    f"Recent memory:\n{json.dumps(recent_memory, indent=2)}\n\n"
                     f"Tools results: {json.dumps(results, indent=2)}\n\n"
                     "Return JSON:\n"
                     "{\n"
@@ -121,5 +129,22 @@ def analyze_financial_data(data: FinancialInput) -> dict:
         output = output.replace("```json", "").replace("```", "").strip()
 
     logging.info(f"Final output: {output}")
+
+    return json.loads(output)
+
+    #Save the interaction
+    if data.user_id:
+        save_interaction(
+            data.user_id, 
+            {
+                "input": {
+                    "income": data.income,
+                    "expenses": data.expenses,
+                    "debt": data.debt,
+                },
+                "tools": selected_tools,
+                "tool_results": results,
+                "final_response": output,
+        })
 
     return json.loads(output)
