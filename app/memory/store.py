@@ -11,5 +11,5 @@ def save_interaction(user_id: str, interaction: dict[str, Any]) -> None:
     #keep only the last 3 interactions
     MEMORY_STORE[user_id] = MEMORY_STORE[user_id][-3:]
 
-get_recent_interactions(user_id: str) -> list[dict[str, Any]]:
+def get_recent_interactions(user_id: str) -> list[dict[str, Any]]:
     return MEMORY_STORE.get(user_id, [])
